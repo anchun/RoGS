@@ -17,8 +17,6 @@
 
 ## Setup
 
-Tested with Pytorch 1.13.1 and CUDA 11.7 and Pytoch3d 0.7.8
-
 ### Clone the repo.
 
 ```bash
@@ -28,10 +26,11 @@ git clone https://github.com/fzhiheng/RoGS.git
 ### Environment setup 
 
 1. ```bash
-   conda create -n rogs python=3.8.10 -y
+   conda create -n rogs python=3.10.16 -y
    conda activate rogs
-   pip install torch==1.13.1+cu117 torchvision==0.14.1+cu117 torchaudio==0.13.1 --extra-index-url https://download.pytorch.org/whl/cu117
-   pip install addict PyYAML tqdm scipy pytz plyfile opencv-python pyrotation pyquaternion nuscenes-devkit
+   pip3 install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu128
+   pip install numpy==1.26.4 opencv-python==4.10.0.82
+   pip install addict PyYAML tqdm scipy pytz plyfile  pyrotation pyquaternion nuscenes-devkit
    ```
 
 2. Install [pytorch3d](https://github.com/facebookresearch/pytorch3d/blob/main/INSTALL.md).
@@ -76,7 +75,7 @@ In `configs/local_nusc.yaml` and `configs/local_nusc_mini.yaml`
 - `road_gt_dir`：Put ground truth here. To produce ground truth:
 
   ```bash
-  python -m preprocess.process --nusc_root /dataset/nuScenes/v1.0-mini --seg_root /dataset/nuScenes/nuScenes_clip ---save_root /dataset/nuScenes/ -v mini --scene_names scene-0655
+  python -m preprocess.process_nusc --nusc_root ~/data/nuscenes-mini/ --seg_root ~/data/nuscenes-mini/nuScenes_clip --save_root ~/data/nuscenes-mini/ -v mini --scene_names scene-0655
   ```
 
 ### KITTI

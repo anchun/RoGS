@@ -257,7 +257,10 @@ class GaussianModel2D(object):
         l = ['x', 'y', 'z', 'nx', 'ny', 'nz']
         # All channels except the 3 DC
         if self.use_rgb:
-            l.extend(['r', 'g', 'b'])
+            for i in range(self._rgb.shape[1]):
+                l.append('f_dc_{}'.format(i))
+            #for i in range(self._rgb.shape[1] * ((self.max_sh_degree + 1) ** 2 - 1)):
+            #    l.append('f_rest_{}'.format(i))
         else:
             for i in range(self._features_dc.shape[1] * self._features_dc.shape[2]):
                 l.append('f_dc_{}'.format(i))
@@ -282,13 +285,14 @@ class GaussianModel2D(object):
         label = self._label.detach().cpu().numpy()  # (n,n_class)
         rotation = self._rotation.detach().cpu().numpy()
         if self.use_rgb:
-            rgb = self.get_rgb.detach().cpu().numpy()   # 方便直接在cloudcompare中查看
-            attributes = np.concatenate((xyz, normals, rgb, opacities, label, scale, rotation), axis=1)
+            rgb = self.get_rgb.detach().cpu().numpy()
+            f_dc = RGB2SH(rgb)
+            #f_rest = np.zeros((f_dc.shape[0], (self.max_sh_degree + 1) ** 2 - 1))
+            attributes = np.concatenate((xyz, normals, f_dc, opacities, label, scale, rotation), axis=1)
         else:
             f_dc = self._features_dc.detach().transpose(1, 2).flatten(start_dim=1).contiguous().cpu().numpy()
-            f_rest = self._features_rest.detach().transpose(1, 2).flatten(start_dim=1).contiguous().cpu().numpy()
+            f_rest = self._features_rest.detach().transpose(1, 2).flatten(start_dim=1).contiguous().cpu().numpy() 
             attributes = np.concatenate((xyz, normals, f_dc, f_rest, opacities, label, scale, rotation), axis=1)
-
         dtype_full = [(attribute, 'f4') for attribute in self.construct_list_of_attributes()]
         elements = np.empty(xyz.shape[0], dtype=dtype_full)
         elements[:] = list(map(tuple, attributes))
