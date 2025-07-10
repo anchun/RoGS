@@ -277,16 +277,16 @@ def train(configs):
                 total_loss += z_smooth_loss
 
             if OPT_Z:
-                cam_xy = T[:2]
-                surround_min_xy = cam_xy - 10
-                surround_max_xy = cam_xy + 10
-                surround_filter1 = torch.logical_and(current_gaussian_xyz[:, 0] > surround_min_xy[0], current_gaussian_xyz[:, 0] < surround_max_xy[0])
-                surround_filter2 = torch.logical_and(current_gaussian_xyz[:, 1] > surround_min_xy[1], current_gaussian_xyz[:, 1] < surround_max_xy[1])
-                surround_filter = torch.logical_and(surround_filter1, surround_filter2)
-                cur_near_idx = z_near_idx[surround_filter]  # (m,k)
-                vis_z = current_gaussian_xyz[:, 2][surround_filter]  # (m,)
-                # cur_near_idx = z_near_idx[visibility_filter]  # (m,k)
-                # vis_z = current_gaussian_xyz[:, 2][visibility_filter]  # (m,)
+                #cam_xy = T[:2]
+                #surround_min_xy = cam_xy - 10
+                #surround_max_xy = cam_xy + 10
+                #surround_filter1 = torch.logical_and(current_gaussian_xyz[:, 0] > surround_min_xy[0], current_gaussian_xyz[:, 0] < surround_max_xy[0])
+                #surround_filter2 = torch.logical_and(current_gaussian_xyz[:, 1] > surround_min_xy[1], current_gaussian_xyz[:, 1] < surround_max_xy[1])
+                #surround_filter = torch.logical_and(surround_filter1, surround_filter2)
+                #cur_near_idx = z_near_idx[surround_filter]  # (m,k)
+                #vis_z = current_gaussian_xyz[:, 2][surround_filter]  # (m,)
+                cur_near_idx = z_near_idx[visibility_filter]  # (m,k)
+                vis_z = current_gaussian_xyz[:, 2][visibility_filter]  # (m,)
                 near_z = knn_gather(sample_xyz[:, 2:].unsqueeze(0), cur_near_idx.unsqueeze(0))  # (1, m, 1, 1)
                 near_z = near_z[0, :, 0, 0]  # (m,k)
                 z_loss = (near_z - vis_z) ** 2

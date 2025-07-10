@@ -20,7 +20,7 @@
 ### Clone the repo.
 
 ```bash
-git clone https://github.com/fzhiheng/RoGS.git
+git clone https://github.com/anchun/RoGS.git
 ```
 
 ### Environment setup 
