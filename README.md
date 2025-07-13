@@ -30,7 +30,7 @@ git clone https://github.com/anchun/RoGS.git
    conda activate rogs
    pip3 install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu128
    pip install numpy==1.26.4 opencv-python==4.10.0.82
-   pip install addict PyYAML tqdm scipy pytz plyfile  pyrotation pyquaternion nuscenes-devkit
+   pip install addict PyYAML tqdm scipy pytz plyfile  pyrotation pyquaternion nuscenes-devkit open3d mediapy
    ```
 
 2. Install [pytorch3d](https://github.com/facebookresearch/pytorch3d/blob/main/INSTALL.md).
@@ -95,7 +95,11 @@ In `configs/local_kitti.yaml`
 ```bash
 python train.py --config configs/local_nusc_mini.yaml
 ```
+## mesh rendering
 
+```bash
+python mesh_render.py --model_path path_to_output_folder_contains_the model
+```
 
 ## Citation
 

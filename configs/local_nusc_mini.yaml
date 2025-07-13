@@ -45,7 +45,7 @@ train:
 
 model:
   bev_resolution: 0.025 # meters
-  cut_range: 8
+  cut_range: 10
   sh_degree: 3
   use_rgb: True
   opt_xy: False
@@ -58,7 +58,7 @@ optimization:
   position_lr_init: 0.000016
   position_lr_final: 0.0000016
   position_lr_delay_mult: 0.01
-  position_lr_max_steps: 10000
+  position_lr_max_steps: 15000
   percent_dense: 0.01
   feature_lr: 0.0005
   opacity_lr: 0.0001
@@ -78,3 +78,10 @@ pipeline:
   convert_SHs_python: False
   compute_cov3D_python: False
   debug: False
+
+mesh_render:
+  voxel_size: 0.025    # Mesh: voxel size for TSDF
+  depth_trunc: 10     # Mesh: Max depth range for TSDF
+  sdf_trunc: 0.5      # Mesh: truncation value for TSDF
+  num_cluster: 50     # Mesh: number of connected clusters to export
+  mesh_res: 1024      # Mesh: resolution for unbounded mesh extraction
