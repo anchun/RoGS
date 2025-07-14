@@ -31,7 +31,7 @@ from utils.image import render_semantic, remap_semantic
 from utils.render import render, render_blocks
 from utils.visualizer import loss2color, depth2color, CustomPointVisualizer
 from models.road import Road
-from models.loss import L1MaskedLoss, CELossWithMask
+from models.loss import L1MaskedLoss, CELossWithMask, SSIM
 from models.exposure_model import ExposureModel
 from models.gaussian_model import GaussianModel2D
 from evalution import eval_bev_metric, eval_z_metric
@@ -166,6 +166,7 @@ def train(configs):
     background = torch.tensor(bg_color, dtype=torch.float32, device=device)
 
     loss_function = L1MaskedLoss()
+    ssim_loss_function = SSIM()
     depth_loss_function = L1MaskedLoss()
     CE_loss_with_mask = CELossWithMask()
 
@@ -250,7 +251,7 @@ def train(configs):
             loss_mask = torch.tensor(loss_mask, device=device)
 
             render_loss = loss_function(render_image, gt_image, loss_mask[:, :, None])
-            total_loss = render_loss.mean()
+            total_loss = 0.8 * render_loss.mean() + 0.2 * ssim_loss_function(render_image, gt_image, loss_mask[:, :, None]).mean()
 
             current_gaussian_xyz = gaussians.get_xyz
             if OPT_DEPTH > 0:
