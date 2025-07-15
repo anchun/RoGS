@@ -15,6 +15,8 @@ from nuscenes.utils.geometry_utils import view_points
 from pyquaternion import Quaternion
 from nuscenes.nuscenes import NuScenes
 
+import sys
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from datasets.nusc import get_nusc_filted_color_map, get_nusc_label_remaps, label2mask
 from utils.visualizer import depth2color
 
@@ -168,21 +170,19 @@ def generate_cam_depth(nusc, cam_name, all_lidars: List[LidarPointCloud], lidar_
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Generate nuscenes dataset")
-    parser.add_argument("--nusc_root", type=str, default="/dataset/nuScenes/v1.0-mini", help="nuscenes dataset root")
-    parser.add_argument("--seg_root", type=str, default="/dataset/nuScenes/nuScenes_clip", help="nuscenes dataset root")
-    parser.add_argument("--save_root", type=str, default="/dataset/nuScenes", help="nuscenes dataset root")
+    parser.add_argument("--base_dir", type=str, default="~/data/nuscenes-mini/", help="nuscenes dataset root")
+    parser.add_argument("--seg_dir", type=str, default="~/data/nuscenes-mini/nuScenes_clip", help="nuscenes dataset segmentation folder")
+    parser.add_argument("--save_dir", type=str, default="~/data/nuscenes-mini/nuScenes_road_gt", help="processed dataset root")
     parser.add_argument("-v","--version", type=str, default="mini", help="nuscenes dataset root")
-    parser.add_argument("--scene_name", type=str, default="scene-0655", help="scene name")
-    parser.add_argument("--scene_names", type=str, nargs="+", default=None, help="scene name")
+    parser.add_argument("--scene_names", type=str, nargs="+", required=True, help="scene names to process, e.g. scene-0655")
     parser.add_argument("--depth", action="store_true", help="generate depth image")
     parser.add_argument("-a", "--depth_use_all_lidar", action="store_true", help="use all lidar frames when generating depth image for a image")
     parser.add_argument("-r", "--lidar_frame_range", type=int, nargs=2, default=(-5, 0), help="lidar frame range")
     args = parser.parse_args()
 
-    nusc_root = args.nusc_root
-    seg_root = args.seg_root
-    save_root = args.save_root
-    gt_root = os.path.join(save_root, "nuScenes_road_gt")
+    nusc_root = args.base_dir
+    seg_root = args.seg_dir
+    gt_root = args.save_dir
     os.makedirs(gt_root, exist_ok=True)
 
     all_cam_names = ["CAM_FRONT", "CAM_FRONT_LEFT", "CAM_FRONT_RIGHT", "CAM_BACK", "CAM_BACK_LEFT", "CAM_BACK_RIGHT"]
@@ -192,8 +192,6 @@ if __name__ == "__main__":
     
     print(f"scene_names: {args.scene_names}")
     for scene_name in args.scene_names:
-
-    # scene_name = args.scene_name
 
         records = [samp for samp in nusc.sample if nusc.get("scene", samp["scene_token"])["name"] in scene_name]
         records.sort(key=lambda x: (x['timestamp']))
@@ -323,9 +321,9 @@ if __name__ == "__main__":
             lidar_frame_range = args.lidar_frame_range
             use_all_frame = args.depth_use_all_lidar
             if use_all_frame:
-                depth_save_root = os.path.join(save_root, "nuScenes_depth_all")
+                depth_save_root = os.path.join(args.save_dir, "nuScenes_depth_all")
             else:
-                depth_save_root = os.path.join(save_root, f"nuScenes_depth_{lidar_frame_range[0]}-{lidar_frame_range[1]}")
+                depth_save_root = os.path.join(args.save_dir, f"nuScenes_depth_{lidar_frame_range[0]}-{lidar_frame_range[1]}")
             os.makedirs(depth_save_root, exist_ok=True)
 
             for cam_name in all_cam_names:

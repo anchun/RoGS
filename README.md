@@ -70,12 +70,27 @@ In `configs/local_nusc.yaml` and `configs/local_nusc_mini.yaml`
 
 - `base_dir`: Put official nuScenes here, e.g. `{base_dir}/v1.0-trainval`
 
-- `image_dir`: Put segmentation results here.   We use the  segmentation results  provided by Rome.  You can download [here](https://drive.google.com/file/d/1WpHu4qa9r1WNmwGFqzY5nv9PMCfwUVOn/view). 
+- `image_dir`: Put segmentation results here.   to generate segmentation:
+
+  ```bash
+  git clone git@github.com:facebookresearch/detectron2.git
+  cd detectron2
+  pip install -v -e .
+  cd ~/src/
+  git clone git@github.com:facebookresearch/Mask2Former.git
+  cd Mask2Former
+  pip install -r requirements.txt
+  cd mask2former/modeling/pixel_decoder/ops
+  # change value.type() to value.scalar_type() before build in /mask2former/modeling/pixel_decoder/ops/src/cuda/ms_deform_attn_cuda.cu
+  sh make.sh
+
+  python ./preprocess/segmentation/process_segmentation.py --base_dir ~/data/nuscenes-mini/ --save_dir ~/data/nuscenes-mini/nuScenes_clip/ --scene_names scene-0655
+  ```
 
 - `road_gt_dir`：Put ground truth here. To produce ground truth:
 
   ```bash
-  python -m preprocess.process_nusc --nusc_root ~/data/nuscenes-mini/ --seg_root ~/data/nuscenes-mini/nuScenes_clip --save_root ~/data/nuscenes-mini/ -v mini --scene_names scene-0655
+  python ./preprocess/process_nuscenes.py --base_dir ~/data/nuscenes-mini/ --seg_dir ~/data/nuscenes-mini/nuScenes_clip --save_dir ~/data/nuscenes-mini/nuScenes_road_gt -v mini --scene_names scene-0655
   ```
 
 ### KITTI
