@@ -48,10 +48,12 @@ def set_randomness(seed):
 def get_configs():
     parser = argparse.ArgumentParser(description='G4M config')
     parser.add_argument('--config', default="configs/local_nusc_mini.yaml", help='config yaml path')
+    parser.add_argument("--scene_name", default=None, help="explicit scenes to process, e.g. scene-0655")
     args = parser.parse_args()
     with open(args.config) as file:
         configs = yaml.safe_load(file)
     configs["file"] = os.path.abspath(args.config)
+    configs["scene_name"] = args.scene_name
     return configs
 
 
@@ -108,7 +110,11 @@ def train(configs):
 
     tz = pytz.timezone("Asia/Shanghai")
     time_show = datetime.datetime.now(tz).strftime("%m-%d-%H-%M")
-    scene_name = dataset_cfg.clip_list[0] if "clip_list" in dataset_cfg else "seq" + dataset_cfg.sequence
+    if configs.scene_name is not None:
+        scene_name = configs.scene_name
+        dataset_cfg.clip_list = [scene_name]
+    else:
+        scene_name = dataset_cfg.clip_list[0] if "clip_list" in dataset_cfg else "seq" + dataset_cfg.sequence
     output_root = os.path.join(
         configs.output,
         f'{scene_name}-{"z" if opt.z_weight > 0 else "no_z"}-{configs.model.cut_range}m-{time_show}',
