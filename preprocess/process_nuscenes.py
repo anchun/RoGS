@@ -8,6 +8,7 @@ from typing import List
 import cv2
 import numpy as np
 from tqdm import tqdm
+import open3d as o3d
 import scipy.sparse as sp
 from plyfile import PlyData, PlyElement
 from nuscenes.utils.data_classes import LidarPointCloud
@@ -47,13 +48,13 @@ def get_pointcloud_to_world(nusc, samp_token, filter_sky=True) -> LidarPointClou
     return pc
 
 
-def worldpoint2camera(nusc, pc: LidarPointCloud, camera_token, min_dist: float = 1.0):
+def worldpoint2camera(nusc, pc_array: np.ndarray, camera_token, min_dist: float = 1.0):
     cam = nusc.get('sample_data', camera_token)
     image = cv2.imread(os.path.join(nusc.dataroot, cam['filename']))
     width = image.shape[1]
     height = image.shape[0]
 
-    pc = LidarPointCloud(pc.points.copy())
+    pc = LidarPointCloud(pc_array.copy())
     # Third step: transform from global into the ego vehicle frame for the timestamp of the image.
     poserecord = nusc.get('ego_pose', cam['ego_pose_token'])
     pc.translate(-np.array(poserecord['translation']))
@@ -130,7 +131,7 @@ def generate_cam_depth(nusc, cam_name, all_lidars: List[LidarPointCloud], lidar_
             label_image = cv2.imread(label_path, cv2.IMREAD_UNCHANGED)
             mask, label = label2mask(label_image)
 
-            uv, depth, im, _ = worldpoint2camera(nusc, current_point_cloud, samp["token"])
+            uv, depth, im, _ = worldpoint2camera(nusc, current_point_cloud.points, samp["token"])
 
             # ===> 从大到小排序, 深度使用最近的点
             idx = np.argsort(depth)[::-1]
@@ -180,9 +181,9 @@ if __name__ == "__main__":
     parser.add_argument("-r", "--lidar_frame_range", type=int, nargs=2, default=(-5, 0), help="lidar frame range")
     args = parser.parse_args()
 
-    nusc_root = args.base_dir
-    seg_root = args.seg_dir
-    gt_root = args.save_dir
+    nusc_root = os.path.expanduser(args.base_dir)
+    seg_root = os.path.expanduser(args.seg_dir)
+    gt_root = os.path.expanduser(args.save_dir)
     os.makedirs(gt_root, exist_ok=True)
 
     all_cam_names = ["CAM_FRONT", "CAM_FRONT_LEFT", "CAM_FRONT_RIGHT", "CAM_BACK", "CAM_BACK_LEFT", "CAM_BACK_RIGHT"]
@@ -236,8 +237,17 @@ if __name__ == "__main__":
         for i in tqdm(range(len(all_lidars))):
             lidar = all_lidars[i]
             lidar_time = lidar_times[i]
-            point_num = lidar.points.shape[1]
-            current_point = lidar.points[:3, :].T
+            
+            #point_num = lidar.points.shape[1]
+            #current_point = lidar.points[:3, :].T
+            # # 进行半径滤波，去除离群点
+            pcd = o3d.geometry.PointCloud()
+            pcd.points = o3d.utility.Vector3dVector(lidar.points[:3, :].T)
+            pcd_clean, ind = pcd.remove_radius_outlier(nb_points=5, radius=0.25)
+            current_point = np.asarray(pcd_clean.points)
+            point_num = current_point.shape[0]
+            extra_intensity = np.zeros((1, point_num))
+            points4d = np.vstack((current_point.T, extra_intensity))  # (4, n), z is intensity
 
             # 根据雷达投影到多个相机上获取雷达点的rgb和语义label
             labels = []
@@ -251,7 +261,7 @@ if __name__ == "__main__":
                 idx = np.argmin(np.abs(cam_time - lidar_time))
                 token = all_cam_tokens[cam][idx]
 
-                uv, depths, image, mask = worldpoint2camera(nusc, lidar, token)  # (2, M), (M,), (H, W, 3), (N,) sum(mask) = M
+                uv, depths, image, mask = worldpoint2camera(nusc, points4d, token)  # (2, M), (M,), (H, W, 3), (N,) sum(mask) = M
                 rel_camera_path = nusc.get("sample_data", token)["filename"]
                 rel_label_path = rel_camera_path.replace("/CAM", "/seg_CAM")
                 rel_label_path = rel_label_path.replace(".jpg", ".png")
